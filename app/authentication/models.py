@@ -1,8 +1,13 @@
+from datetime import datetime, timedelta
+from django.conf import settings
+import jwt
 from django.db import models
+
 
 from django.contrib.auth.models import (
     AbstractBaseUser, BaseUserManager, PermissionsMixin
 )
+
 
 class UserManager(BaseUserManager):
     """
@@ -13,7 +18,7 @@ class UserManager(BaseUserManager):
     to create `User` objects.
     """
 
-    def create_user(self, username, email, password=None):
+    def create_user(self, *args, **kwargs):
         """Create and return a `User` with an email, username and password."""
         if username is None:
             raise TypeError('Users must have a username.')
@@ -46,7 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(db_index=True, max_length=255, unique=False,
                                         default="default-username")
     email = models.EmailField(db_index=True, unique=True)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -59,3 +64,19 @@ class User(AbstractBaseUser, PermissionsMixin):
         This string is used when a `User` is printed in the console.
         """
         return self.email
+
+
+    @property
+    def token(self):
+        """This method generates and returns a string of the token generated.
+        """
+        date = datetime.now() + timedelta(hours=24)
+
+        payload = {
+            'email': self.email,
+            'exp': int(date.strftime('%s')),
+            'id': self.id,
+            "username": self.username
+        }
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        return token

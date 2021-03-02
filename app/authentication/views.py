@@ -6,7 +6,7 @@ from django.shortcuts import render
 from rest_framework.response import Response
 
 
-from .serializers import RegistrationSerializer, User
+from .serializers import RegistrationSerializer, User, LoginSerializer
 
 
 class RegistrationApiView(generics.CreateAPIView):
@@ -18,11 +18,28 @@ class RegistrationApiView(generics.CreateAPIView):
 
         serializer = self.serializer_class(data=user_data)
         serializer.is_valid(raise_exception=True)
-        serializer.save
+        serializer.save()
 
         return_message = {
-            "message": "Registration successful",
+            "message": "Registration successfull",
             "data": serializer.data
         }
 
         return Response(return_message, status=status.HTTP_201_CREATED)
+
+
+
+class LoginAPIView(generics.CreateAPIView):
+    # Login user class
+    permission_classes = (AllowAny,)
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        """
+        Handle user login
+        """
+        user = request.data
+        serializer = self.serializer_class(data=user)
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
